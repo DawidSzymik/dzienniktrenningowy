@@ -46,15 +46,11 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const saveData = (path, value) => {
-      set(ref(db, path), value);
-    };
+    const saveData = (path, value) => set(ref(db, path), value);
 
-    const loadData = async (path, callback) => {
+    const loadData = async (path) => {
       const snapshot = await get(child(ref(db), path));
-      if (snapshot.exists()) {
-        callback(snapshot.val());
-      }
+      return snapshot.exists() ? snapshot.val() : null;
     };
 
     const trainingPlan = {
@@ -66,81 +62,84 @@
     const tabsContainer = document.getElementById("tabs");
     const tabContents = document.getElementById("tabContents");
 
-    for (let cycle = 1; cycle <= 9; cycle++) {
-      const tabButton = document.createElement("button");
-      tabButton.textContent = `Cykl ${cycle}`;
-      tabButton.className = "tab-button";
-      tabButton.dataset.tab = cycle;
-      tabsContainer.appendChild(tabButton);
+    const render = async () => {
+      for (let cycle = 1; cycle <= 9; cycle++) {
+        const tabButton = document.createElement("button");
+        tabButton.textContent = `Cykl ${cycle}`;
+        tabButton.className = "tab-button";
+        tabButton.dataset.tab = cycle;
+        tabsContainer.appendChild(tabButton);
 
-      const tabDiv = document.createElement("div");
-      tabDiv.className = "tab-content";
-      tabDiv.id = `tab-${cycle}`;
+        const tabDiv = document.createElement("div");
+        tabDiv.className = "tab-content";
+        tabDiv.id = `tab-${cycle}`;
 
-      ["A", "B", "C"].forEach(day => {
-        const exercises = trainingPlan[day];
-        const table = document.createElement("table");
-        const caption = document.createElement("caption");
-        caption.textContent = `Dzień ${day}`;
-        table.appendChild(caption);
+        for (const day of ["A", "B", "C"]) {
+          const exercises = trainingPlan[day];
+          const table = document.createElement("table");
+          const caption = document.createElement("caption");
+          caption.textContent = `Dzień ${day}`;
+          table.appendChild(caption);
 
-        const header = table.insertRow();
-        header.innerHTML = "<th>Ćwiczenie</th><th>Seria</th><th>Ciężar [kg]</th><th>Powtórzenia</th>";
+          const header = table.insertRow();
+          header.innerHTML = "<th>Ćwiczenie</th><th>Seria</th><th>Ciężar [kg]</th><th>Powtórzenia</th>";
 
-        exercises.forEach((exercise, exIdx) => {
-          for (let set = 1; set <= 3; set++) {
-            const row = table.insertRow();
-            row.insertCell().textContent = exercise;
-            row.insertCell().textContent = set;
+          for (let exIdx = 0; exIdx < exercises.length; exIdx++) {
+            for (let setNum = 1; setNum <= 3; setNum++) {
+              const row = table.insertRow();
+              row.insertCell().textContent = exercises[exIdx];
+              row.insertCell().textContent = setNum;
 
-            const weightCell = row.insertCell();
-            const repsCell = row.insertCell();
+              const weightCell = row.insertCell();
+              const repsCell = row.insertCell();
 
-            const weightInput = document.createElement("input");
-            const repsInput = document.createElement("input");
+              const weightInput = document.createElement("input");
+              const repsInput = document.createElement("input");
+              const key = `cykl${cycle}/dzien${day}/${exIdx}_set${setNum}`;
 
-            const keyBase = `cykl${cycle}/dzien${day}/${exIdx}_set${set}`;
-
-            loadData(`${keyBase}`, data => {
+              const data = await loadData(key);
               if (data) {
                 weightInput.value = data.weight || "";
                 repsInput.value = data.reps || "";
               }
-            });
 
-            const updateFirebase = () => {
-              saveData(`${keyBase}`, {
-                weight: weightInput.value,
-                reps: repsInput.value
-              });
-            };
+              const update = () => {
+                saveData(key, {
+                  weight: weightInput.value,
+                  reps: repsInput.value
+                });
+              };
 
-            weightInput.addEventListener("input", updateFirebase);
-            repsInput.addEventListener("input", updateFirebase);
+              weightInput.addEventListener("input", update);
+              repsInput.addEventListener("input", update);
 
-            weightCell.appendChild(weightInput);
-            repsCell.appendChild(repsInput);
+              weightCell.appendChild(weightInput);
+              repsCell.appendChild(repsInput);
+            }
           }
+
+          tabDiv.appendChild(table);
+        }
+
+        tabContents.appendChild(tabDiv);
+      }
+
+      const buttons = document.querySelectorAll(".tab-button");
+      const contents = document.querySelectorAll(".tab-content");
+
+      buttons.forEach(btn => {
+        btn.addEventListener("click", () => {
+          buttons.forEach(b => b.classList.remove("active"));
+          contents.forEach(c => c.classList.remove("active"));
+          btn.classList.add("active");
+          document.getElementById(`tab-${btn.dataset.tab}`).classList.add("active");
         });
-
-        tabDiv.appendChild(table);
       });
 
-      tabContents.appendChild(tabDiv);
-    }
+      if (buttons.length) buttons[0].click();
+    };
 
-    const buttons = document.querySelectorAll(".tab-button");
-    const contents = document.querySelectorAll(".tab-content");
-    buttons.forEach(btn => {
-      btn.addEventListener("click", () => {
-        buttons.forEach(b => b.classList.remove("active"));
-        contents.forEach(c => c.classList.remove("active"));
-        btn.classList.add("active");
-        document.getElementById(`tab-${btn.dataset.tab}`).classList.add("active");
-      });
-    });
-
-    buttons[0].click();
+    render();
   </script>
 </body>
 </html>
