@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Plan Treningowy</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+    .tabs { display: flex; flex-wrap: wrap; margin-bottom: 20px; }
+    .tab-button {
+      padding: 10px 15px;
+      margin-right: 5px;
+      background-color: #2c2f33;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    .tab-button.active { background-color: #7289da; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    input { width: 80px; padding: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Plan Treningowy – 9 cykli</h1>
+  <div class="tabs" id="tabs"></div>
+  <div id="tabContents"></div>
+
+  <script>
+    const trainingPlan = {
+      A: ["Wyciskanie na ławce płaskiej", "Prostowanie nóg na maszynie", "Dipy", "Wznosy bokiem"],
+      B: ["Podciąganie", "Martwy ciąg klasyczny", "Wiosłowanie hantlą", "Sztanga biceps"],
+      C: ["OHP", "Przysiad", "RDL", "Kółeczko"]
+    };
+
+    const tabsContainer = document.getElementById("tabs");
+    const tabContents = document.getElementById("tabContents");
+
+    for (let cycle = 1; cycle <= 9; cycle++) {
+      const tabButton = document.createElement("button");
+      tabButton.textContent = `Cykl ${cycle}`;
+      tabButton.className = "tab-button";
+      tabButton.dataset.tab = cycle;
+      tabsContainer.appendChild(tabButton);
+
+      const tabDiv = document.createElement("div");
+      tabDiv.className = "tab-content";
+      tabDiv.id = `tab-${cycle}`;
+
+      ["A", "B", "C"].forEach(day => {
+        const exercises = trainingPlan[day];
+        const table = document.createElement("table");
+        const caption = document.createElement("caption");
+        caption.textContent = `Dzień ${day}`;
+        table.appendChild(caption);
+
+        const header = table.insertRow();
+        header.innerHTML = "<th>Ćwiczenie</th><th>Seria</th><th>Ciężar [kg]</th><th>Powtórzenia</th>";
+
+        exercises.forEach((exercise, exIdx) => {
+          for (let set = 1; set <= 3; set++) {
+            const row = table.insertRow();
+            row.insertCell().textContent = exercise;
+            row.insertCell().textContent = set;
+
+            const weightCell = row.insertCell();
+            const repsCell = row.insertCell();
+
+            const weightInput = document.createElement("input");
+            const repsInput = document.createElement("input");
+
+            const keyBase = `cykl${cycle}_dzien${day}_${exIdx}_set${set}`;
+            weightInput.value = localStorage.getItem(`${keyBase}_weight`) || "";
+            repsInput.value = localStorage.getItem(`${keyBase}_reps`) || "";
+
+            weightInput.addEventListener("input", () => {
+              localStorage.setItem(`${keyBase}_weight`, weightInput.value);
+            });
+
+            repsInput.addEventListener("input", () => {
+              localStorage.setItem(`${keyBase}_reps`, repsInput.value);
+            });
+
+            weightCell.appendChild(weightInput);
+            repsCell.appendChild(repsInput);
+          }
+        });
+
+        tabDiv.appendChild(table);
+      });
+
+      tabContents.appendChild(tabDiv);
+    }
+
+    // Obsługa przełączania zakładek
+    const buttons = document.querySelectorAll(".tab-button");
+    const contents = document.querySelectorAll(".tab-content");
+    buttons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        buttons.forEach(b => b.classList.remove("active"));
+        contents.forEach(c => c.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById(`tab-${btn.dataset.tab}`).classList.add("active");
+      });
+    });
+
+    // Aktywuj pierwszy cykl domyślnie
+    buttons[0].click();
+  </script>
+</body>
+</html>
