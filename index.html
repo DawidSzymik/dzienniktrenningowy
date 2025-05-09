@@ -1,8 +1,37 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8" />
-  <title>Plan Treningowy</title>
+  <meta charset="UTF-8">
+  <title>Dziennik Treningowy</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+    import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAho0iBP-oMOmDF7h4rdcaGAKalzCeUqPo",
+      authDomain: "dzienniktrenningowy.firebaseapp.com",
+      projectId: "dzienniktrenningowy",
+      storageBucket: "dzienniktrenningowy.firebasestorage.app",
+      messagingSenderId: "630226288891",
+      appId: "1:630226288891:web:bbb90c480e5a8183a9305e",
+      measurementId: "G-6V04VH86SK",
+      databaseURL: "https://dzienniktrenningowy-default-rtdb.europe-west1.firebasedatabase.app"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    window.saveData = (path, value) => {
+      set(ref(db, path), value);
+    };
+
+    window.loadData = async (path, callback) => {
+      const snapshot = await get(child(ref(db), path));
+      if (snapshot.exists()) {
+        callback(snapshot.val());
+      }
+    };
+  </script>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
     .tabs { display: flex; flex-wrap: wrap; margin-bottom: 20px; }
@@ -24,7 +53,7 @@
   </style>
 </head>
 <body>
-  <h1>Plan Treningowy – 9 cykli</h1>
+  <h1>Dziennik Treningowy – 9 cykli</h1>
   <div class="tabs" id="tabs"></div>
   <div id="tabContents"></div>
 
@@ -71,16 +100,28 @@
             const weightInput = document.createElement("input");
             const repsInput = document.createElement("input");
 
-            const keyBase = `cykl${cycle}_dzien${day}_${exIdx}_set${set}`;
-            weightInput.value = localStorage.getItem(`${keyBase}_weight`) || "";
-            repsInput.value = localStorage.getItem(`${keyBase}_reps`) || "";
+            const keyBase = `cykl${cycle}/dzien${day}/${exIdx}_set${set}`;
+
+            // Ładowanie danych z Firebase
+            window.loadData(`${keyBase}`, data => {
+              if (data) {
+                weightInput.value = data.weight || "";
+                repsInput.value = data.reps || "";
+              }
+            });
 
             weightInput.addEventListener("input", () => {
-              localStorage.setItem(`${keyBase}_weight`, weightInput.value);
+              window.saveData(`${keyBase}`, {
+                weight: weightInput.value,
+                reps: repsInput.value
+              });
             });
 
             repsInput.addEventListener("input", () => {
-              localStorage.setItem(`${keyBase}_reps`, repsInput.value);
+              window.saveData(`${keyBase}`, {
+                weight: weightInput.value,
+                reps: repsInput.value
+              });
             });
 
             weightCell.appendChild(weightInput);
@@ -94,7 +135,6 @@
       tabContents.appendChild(tabDiv);
     }
 
-    // Obsługa przełączania zakładek
     const buttons = document.querySelectorAll(".tab-button");
     const contents = document.querySelectorAll(".tab-content");
     buttons.forEach(btn => {
@@ -106,7 +146,6 @@
       });
     });
 
-    // Aktywuj pierwszy cykl domyślnie
     buttons[0].click();
   </script>
 </body>
