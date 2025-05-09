@@ -30,7 +30,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
-    import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-database.js";
+    import { getDatabase, ref, set, get, child, update } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAho0iBP-oMOmDF7h4rdcaGAKalzCeUqPo",
@@ -46,11 +46,12 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const saveData = (path, value) => set(ref(db, path), value);
+    const saveSingle = (path, value) => set(ref(db, path), value);
 
-    const loadData = async (path) => {
-      const snapshot = await get(child(ref(db), path));
-      return snapshot.exists() ? snapshot.val() : null;
+    const loadDayData = async (cycle, day) => {
+      const fullPath = `cykl${cycle}/dzien${day}`;
+      const snapshot = await get(child(ref(db), fullPath));
+      return snapshot.exists() ? snapshot.val() : {};
     };
 
     const trainingPlan = {
@@ -76,6 +77,8 @@
 
         for (const day of ["A", "B", "C"]) {
           const exercises = trainingPlan[day];
+          const dayData = await loadDayData(cycle, day);
+
           const table = document.createElement("table");
           const caption = document.createElement("caption");
           caption.textContent = `Dzień ${day}`;
@@ -95,16 +98,15 @@
 
               const weightInput = document.createElement("input");
               const repsInput = document.createElement("input");
-              const key = `cykl${cycle}/dzien${day}/${exIdx}_set${setNum}`;
+              const key = `${exIdx}_set${setNum}`;
+              const entry = dayData?.[key] || {};
 
-              const data = await loadData(key);
-              if (data) {
-                weightInput.value = data.weight || "";
-                repsInput.value = data.reps || "";
-              }
+              weightInput.value = entry.weight || "";
+              repsInput.value = entry.reps || "";
 
               const update = () => {
-                saveData(key, {
+                const path = `cykl${cycle}/dzien${day}/${key}`;
+                saveSingle(path, {
                   weight: weightInput.value,
                   reps: repsInput.value
                 });
