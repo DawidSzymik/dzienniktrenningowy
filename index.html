@@ -21,10 +21,17 @@
     table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
     th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
     input { width: 80px; padding: 4px; }
+    .cycle-info { 
+      background: #e8f4f8; 
+      padding: 10px; 
+      border-radius: 5px; 
+      margin-bottom: 20px;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
-  <h1>Dziennik Treningowy – 9 cykli</h1>
+  <h1>Dziennik Treningowy – 9 cykli (po 2 dni każdy)</h1>
   <div class="tabs" id="tabs"></div>
   <div id="tabContents"></div>
 
@@ -35,29 +42,28 @@
     const firebaseConfig = {
       apiKey: "AIzaSyAho0iBP-oMOmDF7h4rdcaGAKalzCeUqPo",
       authDomain: "dzienniktrenningowy.firebaseapp.com",
+      databaseURL: "https://dzienniktrenningowy-default-rtdb.europe-west1.firebasedatabase.app",
       projectId: "dzienniktrenningowy",
       storageBucket: "dzienniktrenningowy.firebasestorage.app",
       messagingSenderId: "630226288891",
-      appId: "1:630226288891:web:bbb90c480e5a8183a9305e",
-      measurementId: "G-6V04VH86SK",
-      databaseURL: "https://dzienniktrenningowy-default-rtdb.europe-west1.firebasedatabase.app"
+      appId: "1:630226288891:web:233eb7355c8041c4a9305e",
+      measurementId: "G-1C09XYRCGD"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    const saveSingle = (path, value) => set(ref(db, path), value);
+    const saveSingle = (path, value) => set(ref(db, `dziennik/${path}`), value);
 
     const loadDayData = async (cycle, day) => {
-      const fullPath = `cykl${cycle}/dzien${day}`;
+      const fullPath = `dziennik/cykl${cycle}/dzien${day}`;
       const snapshot = await get(child(ref(db), fullPath));
       return snapshot.exists() ? snapshot.val() : {};
     };
 
     const trainingPlan = {
-      A: ["Wyciskanie na ławce płaskiej", "Prostowanie nóg na maszynie", "Dipy", "Wznosy bokiem"],
-      B: ["Podciąganie", "Martwy ciąg klasyczny", "Wiosłowanie hantlą", "Sztanga biceps"],
-      C: ["OHP", "Przysiad", "RDL", "Kółeczko"]
+      1: ["OHP", "Dipy", "Arnold Press", "Suwnica na nogi", "Maszyna na brzuch"],
+      2: ["Podciąganie", "Wiosłowanie sztanga", "RDL", "Biceps sztanga łamana", "Kółeczko"]
     };
 
     const tabsContainer = document.getElementById("tabs");
@@ -75,13 +81,22 @@
         tabDiv.className = "tab-content";
         tabDiv.id = `tab-${cycle}`;
 
-        for (const day of ["A", "B", "C"]) {
+        // Dodaj info o cyklu
+        const cycleInfo = document.createElement("div");
+        cycleInfo.className = "cycle-info";
+        cycleInfo.innerHTML = `<strong>Cykl ${cycle}</strong> - Dzień 1 i Dzień 2`;
+        tabDiv.appendChild(cycleInfo);
+
+        for (const day of [1, 2]) {
           const exercises = trainingPlan[day];
           const dayData = await loadDayData(cycle, day);
 
           const table = document.createElement("table");
           const caption = document.createElement("caption");
           caption.textContent = `Dzień ${day}`;
+          caption.style.fontWeight = "bold";
+          caption.style.fontSize = "18px";
+          caption.style.marginBottom = "10px";
           table.appendChild(caption);
 
           const header = table.insertRow();
@@ -103,6 +118,8 @@
 
               weightInput.value = entry.weight || "";
               repsInput.value = entry.reps || "";
+              weightInput.placeholder = "kg";
+              repsInput.placeholder = "reps";
 
               const update = () => {
                 const path = `cykl${cycle}/dzien${day}/${key}`;
