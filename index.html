@@ -352,11 +352,52 @@
     const progressIndicator = document.getElementById("progressIndicator");
 
     const updateProgress = () => {
-      // Prosta kalkulacja postępu - można rozszerzyć
-      const inputs = document.querySelectorAll('input[value]');
+      const inputs = document.querySelectorAll('input');
       const filledInputs = Array.from(inputs).filter(input => input.value.trim() !== '');
       const progress = inputs.length > 0 ? Math.round((filledInputs.length / inputs.length) * 100) : 0;
       progressIndicator.textContent = `Postęp: ${progress}%`;
+    };
+
+    const updateStats = (cycle) => {
+      const statsDiv = document.querySelector(`#tab-${cycle} .stats-summary`);
+      if (!statsDiv) return;
+
+      const inputs = document.querySelectorAll(`#tab-${cycle} input`);
+      const filledInputs = Array.from(inputs).filter(input => input.value.trim() !== '');
+      const cycleProgress = inputs.length > 0 ? Math.round((filledInputs.length / inputs.length) * 100) : 0;
+      
+      // Oblicz statystyki
+      const weightInputs = Array.from(document.querySelectorAll(`#tab-${cycle} .weight-input`))
+        .filter(input => input.value.trim() !== '');
+      const repsInputs = Array.from(document.querySelectorAll(`#tab-${cycle} .reps-input`))
+        .filter(input => input.value.trim() !== '');
+      
+      const totalWeight = weightInputs.reduce((sum, input) => sum + parseFloat(input.value || 0), 0);
+      const totalReps = repsInputs.reduce((sum, input) => sum + parseInt(input.value || 0), 0);
+      const avgWeight = weightInputs.length > 0 ? (totalWeight / weightInputs.length).toFixed(1) : 0;
+      const avgReps = repsInputs.length > 0 ? Math.round(totalReps / repsInputs.length) : 0;
+      
+      statsDiv.innerHTML = `
+        <h4>📊 Podsumowanie cyklu ${cycle}</h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+          <div style="background: white; padding: 15px; border-radius: 10px; text-align: center;">
+            <div style="font-size: 2em; color: #28a745; font-weight: bold;">${cycleProgress}%</div>
+            <div style="color: #6c757d; font-size: 0.9em;">Ukończone</div>
+          </div>
+          <div style="background: white; padding: 15px; border-radius: 10px; text-align: center;">
+            <div style="font-size: 2em; color: #17a2b8; font-weight: bold;">${avgWeight}</div>
+            <div style="color: #6c757d; font-size: 0.9em;">Średni ciężar (kg)</div>
+          </div>
+          <div style="background: white; padding: 15px; border-radius: 10px; text-align: center;">
+            <div style="font-size: 2em; color: #ffc107; font-weight: bold;">${avgReps}</div>
+            <div style="color: #6c757d; font-size: 0.9em;">Średnie powtórzenia</div>
+          </div>
+          <div style="background: white; padding: 15px; border-radius: 10px; text-align: center;">
+            <div style="font-size: 2em; color: #dc3545; font-weight: bold;">${totalWeight}</div>
+            <div style="color: #6c757d; font-size: 0.9em;">Łączny ciężar (kg)</div>
+          </div>
+        </div>
+      `;
     };
 
     const render = async () => {
@@ -434,6 +475,7 @@
                   reps: repsInput.value
                 });
                 updateProgress();
+                updateStats(cycle);
               };
 
               weightInput.addEventListener("input", update);
@@ -474,7 +516,12 @@
 
       if (buttons.length) {
         buttons[0].click();
-        updateProgress();
+        setTimeout(() => {
+          updateProgress();
+          for (let i = 1; i <= 9; i++) {
+            updateStats(i);
+          }
+        }, 100);
       }
     };
 
