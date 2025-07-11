@@ -2,38 +2,319 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dziennik Treningowy</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
-    .tabs { display: flex; flex-wrap: wrap; margin-bottom: 20px; }
-    .tab-button {
-      padding: 10px 15px;
-      margin-right: 5px;
-      background-color: #2c2f33;
-      color: white;
-      border: none;
-      cursor: pointer;
-      border-radius: 5px;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-    .tab-button.active { background-color: #7289da; }
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-    input { width: 80px; padding: 4px; }
-    .cycle-info { 
-      background: #e8f4f8; 
-      padding: 10px; 
-      border-radius: 5px; 
-      margin-bottom: 20px;
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
       text-align: center;
+      position: relative;
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="white" opacity="0.1"/><circle cx="80" cy="40" r="1.5" fill="white" opacity="0.1"/><circle cx="40" cy="80" r="1" fill="white" opacity="0.1"/><circle cx="90" cy="90" r="1" fill="white" opacity="0.1"/></svg>');
+      pointer-events: none;
+    }
+
+    .header h1 {
+      font-size: 2.5em;
+      font-weight: 300;
+      margin-bottom: 10px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .header p {
+      font-size: 1.1em;
+      opacity: 0.9;
+      position: relative;
+      z-index: 1;
+    }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      background: #f8f9fa;
+      padding: 20px 20px 0;
+      border-bottom: 2px solid #e9ecef;
+    }
+
+    .tab-button {
+      padding: 12px 24px;
+      margin: 0 8px 20px 0;
+      background: white;
+      color: #6c757d;
+      border: 2px solid #e9ecef;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 1em;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    .tab-button:hover {
+      background: #f8f9fa;
+      border-color: #667eea;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .tab-button.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-color: #667eea;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .tab-content {
+      display: none;
+      padding: 30px;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .cycle-info {
+      background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 30px;
+      text-align: center;
+      border-left: 5px solid #2196f3;
+    }
+
+    .cycle-info h2 {
+      color: #1976d2;
+      margin-bottom: 5px;
+      font-size: 1.5em;
+    }
+
+    .cycle-info p {
+      color: #424242;
+      font-size: 1.1em;
+    }
+
+    .day-section {
+      margin-bottom: 40px;
+    }
+
+    .day-header {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      padding: 15px 25px;
+      border-radius: 15px 15px 0 0;
+      border-left: 5px solid #28a745;
+      margin-bottom: 0;
+    }
+
+    .day-header h3 {
+      color: #495057;
+      font-size: 1.3em;
+      font-weight: 600;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 0 0 15px 15px;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    th {
+      background: linear-gradient(135deg, #495057 0%, #6c757d 100%);
+      color: white;
+      padding: 15px 12px;
+      font-weight: 600;
+      text-align: center;
+      font-size: 0.9em;
+      letter-spacing: 0.5px;
+    }
+
+    td {
+      padding: 12px;
+      text-align: center;
+      border-bottom: 1px solid #f1f3f4;
+      font-weight: 500;
+    }
+
+    tr:hover {
+      background: #f8f9fa;
+    }
+
+    .exercise-name {
+      font-weight: 600;
+      color: #495057;
+      text-align: left !important;
+      padding-left: 20px;
+    }
+
+    .set-number {
+      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+      color: white;
+      font-weight: 600;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+      font-size: 0.9em;
+    }
+
+    input {
+      width: 80px;
+      padding: 8px 12px;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      font-size: 1em;
+      text-align: center;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      background: white;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      transform: scale(1.05);
+    }
+
+    input:hover {
+      border-color: #ced4da;
+    }
+
+    .weight-input {
+      border-color: #17a2b8;
+    }
+
+    .weight-input:focus {
+      border-color: #17a2b8;
+      box-shadow: 0 0 0 3px rgba(23, 162, 184, 0.1);
+    }
+
+    .reps-input {
+      border-color: #ffc107;
+    }
+
+    .reps-input:focus {
+      border-color: #ffc107;
+      box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.1);
+    }
+
+    .stats-summary {
+      background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%);
+      padding: 20px;
+      border-radius: 15px;
+      margin-top: 30px;
+      border-left: 5px solid #ffc107;
+    }
+
+    .stats-summary h4 {
+      color: #856404;
+      margin-bottom: 10px;
+      font-size: 1.2em;
+    }
+
+    .progress-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: white;
+      padding: 10px 20px;
+      border-radius: 25px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      font-weight: 600;
+      color: #495057;
+      z-index: 1000;
+    }
+
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 2em;
+      }
+      
+      .tabs {
+        padding: 15px 10px 0;
+      }
+      
+      .tab-button {
+        padding: 10px 16px;
+        font-size: 0.9em;
+        margin: 0 5px 15px 0;
+      }
+      
+      .tab-content {
+        padding: 20px 15px;
+      }
+      
+      input {
+        width: 70px;
+        padding: 6px 8px;
+      }
+      
+      th, td {
+        padding: 8px 6px;
+        font-size: 0.9em;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>Dziennik Treningowy – 9 cykli (po 2 dni każdy)</h1>
-  <div class="tabs" id="tabs"></div>
-  <div id="tabContents"></div>
+  <div class="container">
+    <div class="header">
+      <h1>💪 Dziennik Treningowy</h1>
+      <p>9 cykli treningowych - profesjonalny monitoring postępów</p>
+    </div>
+    
+    <div class="tabs" id="tabs"></div>
+    <div id="tabContents"></div>
+  </div>
+
+  <div class="progress-indicator" id="progressIndicator">
+    Postęp: 0%
+  </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
@@ -68,6 +349,15 @@
 
     const tabsContainer = document.getElementById("tabs");
     const tabContents = document.getElementById("tabContents");
+    const progressIndicator = document.getElementById("progressIndicator");
+
+    const updateProgress = () => {
+      // Prosta kalkulacja postępu - można rozszerzyć
+      const inputs = document.querySelectorAll('input[value]');
+      const filledInputs = Array.from(inputs).filter(input => input.value.trim() !== '');
+      const progress = inputs.length > 0 ? Math.round((filledInputs.length / inputs.length) * 100) : 0;
+      progressIndicator.textContent = `Postęp: ${progress}%`;
+    };
 
     const render = async () => {
       for (let cycle = 1; cycle <= 9; cycle++) {
@@ -81,38 +371,54 @@
         tabDiv.className = "tab-content";
         tabDiv.id = `tab-${cycle}`;
 
-        // Dodaj info o cyklu
+        // Info o cyklu
         const cycleInfo = document.createElement("div");
         cycleInfo.className = "cycle-info";
-        cycleInfo.innerHTML = `<strong>Cykl ${cycle}</strong> - Dzień 1 i Dzień 2`;
+        cycleInfo.innerHTML = `
+          <h2>Cykl ${cycle}</h2>
+          <p>Dzień 1: Górna część ciała • Dzień 2: Dolna część ciała</p>
+        `;
         tabDiv.appendChild(cycleInfo);
 
         for (const day of [1, 2]) {
           const exercises = trainingPlan[day];
           const dayData = await loadDayData(cycle, day);
 
-          const table = document.createElement("table");
-          const caption = document.createElement("caption");
-          caption.textContent = `Dzień ${day}`;
-          caption.style.fontWeight = "bold";
-          caption.style.fontSize = "18px";
-          caption.style.marginBottom = "10px";
-          table.appendChild(caption);
+          const daySection = document.createElement("div");
+          daySection.className = "day-section";
 
+          const dayHeader = document.createElement("div");
+          dayHeader.className = "day-header";
+          dayHeader.innerHTML = `<h3>📅 Dzień ${day} - ${day === 1 ? 'Trening górnej części ciała' : 'Trening dolnej części ciała'}</h3>`;
+          daySection.appendChild(dayHeader);
+
+          const table = document.createElement("table");
           const header = table.insertRow();
           header.innerHTML = "<th>Ćwiczenie</th><th>Seria</th><th>Ciężar [kg]</th><th>Powtórzenia</th>";
 
           for (let exIdx = 0; exIdx < exercises.length; exIdx++) {
             for (let setNum = 1; setNum <= 3; setNum++) {
               const row = table.insertRow();
-              row.insertCell().textContent = exercises[exIdx];
-              row.insertCell().textContent = setNum;
+              
+              const exerciseCell = row.insertCell();
+              exerciseCell.textContent = exercises[exIdx];
+              exerciseCell.className = "exercise-name";
+              
+              const setCell = row.insertCell();
+              const setDiv = document.createElement("div");
+              setDiv.className = "set-number";
+              setDiv.textContent = setNum;
+              setCell.appendChild(setDiv);
 
               const weightCell = row.insertCell();
               const repsCell = row.insertCell();
 
               const weightInput = document.createElement("input");
               const repsInput = document.createElement("input");
+              
+              weightInput.className = "weight-input";
+              repsInput.className = "reps-input";
+              
               const key = `${exIdx}_set${setNum}`;
               const entry = dayData?.[key] || {};
 
@@ -127,6 +433,7 @@
                   weight: weightInput.value,
                   reps: repsInput.value
                 });
+                updateProgress();
               };
 
               weightInput.addEventListener("input", update);
@@ -137,8 +444,18 @@
             }
           }
 
-          tabDiv.appendChild(table);
+          daySection.appendChild(table);
+          tabDiv.appendChild(daySection);
         }
+
+        // Dodaj sekcję statystyk
+        const statsDiv = document.createElement("div");
+        statsDiv.className = "stats-summary";
+        statsDiv.innerHTML = `
+          <h4>📊 Podsumowanie cyklu ${cycle}</h4>
+          <p>Uzupełnij treningi aby zobaczyć statystyki postępów</p>
+        `;
+        tabDiv.appendChild(statsDiv);
 
         tabContents.appendChild(tabDiv);
       }
@@ -155,7 +472,10 @@
         });
       });
 
-      if (buttons.length) buttons[0].click();
+      if (buttons.length) {
+        buttons[0].click();
+        updateProgress();
+      }
     };
 
     render();
